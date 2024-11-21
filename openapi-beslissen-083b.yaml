@@ -1,0 +1,1287 @@
+openapi: 3.0.0
+info:
+  title: Beslissen levensonderhoud
+  version: '1'
+  description: Opvragen van gegevens die geadministreerd moeten worden nadat een beslissing is genomen mbt een aanvraag levensonderhoud. Er worden gegevens verstrekt mbt de te leveren dienst zodat deze juist geadministreerd kan worden en de betaling gepland kan worden. Er kan geleverd worden.
+  contact:
+    name: Jan Brinkkemper
+    email: jan.brinkkemper@vng.nl
+    url: vngr.nl
+  termsOfService: nvt
+servers:
+  - url: 'http://localhost:3000'
+
+paths:
+  /AanvragenLevensonderhoudBeslissing/{AanvraagId}:
+    get:
+      parameters:
+        - in: path
+          name: AanvraagId
+          required: true
+          schema:
+            type: string
+      description: Opvragen van gegevens die geadministreerd moeten worden nadat een beslissing is genomen mbt een aanvraag levensonderhoud. Er worden gegevens verstrekt mbt de te leveren dienst zodat deze juist geadministreerd kan worden en de betaling gepland kan worden. Er kan geleverd worden.
+      summary: Geeft gegevens 
+      operationId: getAanvraagLevensonderhoudBeslissing
+      security:
+       - apiAuth: []
+      responses:
+        '200':
+          description: DienstAangevraagd
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DienstAangevraagd'
+              examples: {}
+        '401':
+          $ref: '#/components/responses/401'
+        '404':
+          $ref: '#/components/responses/404'
+      #todo: andere mogelijke responses definieren
+components:
+ securitySchemes:
+  apiAuth:
+   type: http
+   scheme: bearer
+   bearerFormat: JWT
+ responses:
+    '401':
+      description: Unauthorized
+      headers:
+        API-version:
+          schema:
+            type: string
+          description: 'Geeft een specifieke API-versie aan in de context van een
+            specifieke aanroep. Voorbeeld: 1.2.1.'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Fout'
+    '404':
+      description: Not found
+      headers:
+        API-version:
+          schema:
+            type: string
+          description: 'Geeft een specifieke API-versie aan in de context van een
+            specifieke aanroep. Voorbeeld: 1.2.1.'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Fout'
+ schemas:
+  Fout:
+   required:
+    - code
+    - title
+    - status
+    - detail
+    - instance
+   type: object
+   properties:
+    type:
+      title: Type
+      description: URI referentie naar het type fout, bedoeld voor developers
+      type: string
+    code:
+      title: Code
+      description: Systeemcode die het type fout aangeeft
+      type: string
+      minLength: 1
+    title:
+      title: Title
+      description: Generieke titel voor het type fout
+      type: string
+      minLength: 1
+    status:
+      title: Status
+      description: De HTTP status code
+      type: integer
+    detail:
+      title: Detail
+      description: Extra informatie bij de fout, indien beschikbaar
+      type: string
+      minLength: 1
+    instance:
+      title: Instance
+      description: URI met referentie naar dit specifiek voorkomen van de fout.
+          Deze kan gebruikt worden in combinatie met server logs, bijvoorbeeld.
+      type: string
+      minLength: 1
+  DienstAangevraagd:
+    properties:
+      Aanvraagid:
+        type: string
+        pattern: ^(\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\}{0,1})$
+        description: ''
+      Naam:
+        type: string
+        description: ''
+      Begindatum:
+        type: string
+        description: Datum waarop de dienstverlening begint.
+      Einddatum:
+        type: string
+        description: n.t.b.
+      Type:
+        type: string
+        description: ''
+      PeriodiciteitInkomstenformulier:
+        type: string
+        enum:
+          - Niet van toepassing
+          - Geen
+          - Incidenteel
+          - Eenmalig
+          - Minuut
+          - Uur
+          - Dag
+          - Week
+          - 2 weken
+          - 4 weken
+          - Maand
+          - 5 weken
+          - 13 weken
+          - Kwartaal
+          - Halfjaar
+          - 52 weken
+          - Jaar
+          - Overig
+        description: Dit gegeven geeft aan met welk tijdsinterval een inkomstenformulier moet worden gestuurd naar de klant om de klant zijn inkomsten van die maand op te kunnen laten gegeven. Het betreft het postkanaal. Digitaal kanaal werkt met notificaties.
+      PeriodiciteitStatusformulier:
+        type: string
+        enum:
+          - Niet van toepassing
+          - Geen
+          - Incidenteel
+          - Week
+          - 2 weken
+          - 4 weken
+          - Maand
+          - 5 weken
+          - Kwartaal
+          - Jaar
+          - Overig
+        description: Dit gegeven geeft aan met welk tijdsinterval een statusformulier moet worden gestuurd naar de klant om te checken of de gegevens nog actueel zijn op basis waarvan de uitkering wordt bepaald.
+      StartdatumStatusformulier:
+        type: string
+        description: Geeft aan wanneer de periodiek van verzenden statusformulier start
+      CodeOntvangendeGemeente:
+        type: string
+        description: De code van de gemeente, die de aanvraag ontvangt en verwerkt.
+      AantalKostendelers:
+        type: integer
+        pattern: ^-?[0-9]{1,}$
+        description: Afgeleid gegeven uit opgegeven medebewoners bij de aanvraag en wordt alleen in het S2S-koppelvlak meegenomen omdat de gegevens van de medebewoners niet zonder doelbinding in vervolgprocessen kunnen worden gebruikt.
+      Aanvraagdatum:
+        type: string
+        description: 'De datum waarop de aanvraag is ingediend.Doorgaans is dit de verzenddatum, echter, de aanvraag kan leiden tot een compleetheid- en juistheidtoets. Dit kan betekenen dat de aanvraag pas later wordt gecompleteerd. '
+      Betaling:
+        type: array
+        items:
+          $ref: '#/components/schemas/UitbetalingUitkering'
+        minItems: 0
+        maxItems: 1
+      RedenAanvraagClient:
+        type: array
+        items:
+          $ref: '#/components/schemas/RedenAanvraag'
+        minItems: 0
+        maxItems: 1
+      RedenAanvraagPartner:
+        type: array
+        items:
+          $ref: '#/components/schemas/RedenAanvraag'
+        minItems: 0
+        maxItems: 1
+      Betalingsblokkade:
+        type: array
+        items:
+          $ref: '#/components/schemas/Betalingsblokkade'
+        minItems: 0
+        maxItems: 2
+      Norm:
+        type: array
+        items:
+          $ref: '#/components/schemas/Norm'
+        minItems: 1
+        maxItems: 1
+      Verlagingen:
+        type: array
+        items:
+          $ref: '#/components/schemas/Verlaging'
+        minItems: 0
+        uniqueItems: true
+      MaatregelenOpUitkering:
+        type: array
+        items:
+          $ref: '#/components/schemas/MaatregelOpUitkering'
+        minItems: 0
+        uniqueItems: true
+      PeriodiekBijzondereBijstandLevensonderhoud:
+        type: array
+        items:
+          $ref: '#/components/schemas/PeriodiekBijzondereBijstandLevensonderhoud'
+        minItems: 0
+        maxItems: 1
+      Zaak:
+        type: array
+        items:
+          $ref: '#/components/schemas/Zaak'
+        minItems: 0
+        maxItems: 1
+      Kostendelers:
+        type: array
+        items:
+          $ref: '#/components/schemas/Kostendeler'
+        minItems: 0
+      Aanvrager:
+        type: array
+        items:
+          $ref: '#/components/schemas/Aanvrager'
+        minItems: 1
+        maxItems: 1
+    additionalProperties: false
+    required:
+      - Aanvraagid
+      - Naam
+      - Begindatum
+      - Einddatum
+      - Type
+      - PeriodiciteitInkomstenformulier
+      - PeriodiciteitStatusformulier
+      - CodeOntvangendeGemeente
+      - AantalKostendelers
+      - Aanvraagdatum
+  Zaak:
+    properties:
+      Url:
+        type: string
+        description: URL-referentie naar dit object. Dit is de unieke identificatie en locatie van dit object.
+      Uuid:
+        type: string
+        pattern: ^(\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\}{0,1})$
+        description: De unieke identificatie van de ZAAK binnen de organisatie die verantwoordelijk is voor de behandeling van de ZAAK.
+      Identificatie:
+        type: string
+        description: De unieke identificatie van de ZAAK binnen de organisatie die verantwoordelijk is voor de behandeling van de ZAAK.
+    additionalProperties: false
+    required:
+      - Identificatie
+  Aanvrager:
+    properties:
+      Burgerservicenummer:
+        type: string
+        pattern: ^[0-9]{9}$
+        description: 'Een uniek identificerend nummer van een PERSOON, die ingeschreven staat in de Gemeentelijke Basisadministratie Persoonsgegevens (GBA) of de Registratie Niet-ingezetenen (RNI).Bron: SGROpmerking:Elk nummer moet voldoen aan de bij de voorwaarden beschreven proef.Voorwaarden waarde BSN:  Indien het nummer per cijfer wordt aangeduid als (s0 s1 s2 s3 s4 s5 s6 s7 s8), dan is de volgende voorwaarde te controleren: (9 x s0) + (8 x s1) + (7 x s2) + (6 x s3) + (5 x s4) + (4 x s5) + (3 x s6) + (2 x s7) - (1 x s8) is deelbaar door 11Toelichting:  Het Burgerservicenummer onderscheidt zich van het Sofi-nummer voornamelijk voor wat betreft het bereik ervan en de wijze waarop wettelijk is vastgelegd wat met behulp van het Burgerservicenummer mag gebeuren.  De gebruikers van het Burgerservicenummer bestaan uit overheidsorganen alsmede niet-overheidsorganen. Omdat het niet duidelijk is wat de criteria zijn om niet-overheidsorganen wel of niet toe te laten tot het gebruik van het Burgerservicenummer is besloten om de gebruikersaspecten niet in de definitie op te nemen.De oorspronkelijke naamgeving en definitie van dit gegevenselement conform de (authentieke) bron:Elementnaam:    BurgerservicenummerDefinitie:    Elk ingeschreven persoon heeft een BSN, een nummer dat de persoon uniek identificeert in alle overheidsadministraties.Norminstantie:    GBA'
+      Geboortedatum:
+        type: string
+        description: 'De datum van geboorte van een PERSOON.Bron: NEN 1888:2002 - Geboortedatum (overgenomen zoals in SGR)Opmerking:Deze datum staat gewoonlijk vermeld op de geboorteakte dan wel een ander brondocument.Een GEBOORTEDATUM behoort te worden vastgesteld in verband met zijn rechtsgeldige betekenis, in het bijzonder voor de instellingen die minimaal een SZ-WET uitvoeren.'
+      Voorkeurskanaal:
+        type: string
+        enum:
+          - Fysiek
+          - Digitaal
+        description: Het type verzending die de burger prefereert (digitaal of fysiek).
+      Identiteitsbewijs:
+        type: array
+        items:
+          $ref: '#/components/schemas/Identiteitsbewijs'
+        minItems: 0
+        uniqueItems: true
+      Vreemdelingendocument:
+        type: array
+        items:
+          $ref: '#/components/schemas/Vreemdelingendocument'
+        minItems: 0
+        uniqueItems: true
+      Partner:
+        type: array
+        items:
+          $ref: '#/components/schemas/Partner'
+        minItems: 0
+        maxItems: 1
+        uniqueItems: true
+      Kinderen:
+        type: array
+        items:
+          $ref: '#/components/schemas/Kind'
+        minItems: 0
+        uniqueItems: true
+      Huisvesting:
+        type: array
+        items:
+          $ref: '#/components/schemas/Huisvesting'
+        minItems: 0
+        maxItems: 1
+        uniqueItems: true
+      Contactgegevens:
+        type: array
+        items:
+          $ref: '#/components/schemas/Contactgegevens'
+        minItems: 0
+        uniqueItems: true
+      Huishouden:
+        type: array
+        items:
+          $ref: '#/components/schemas/Huishouden'
+        minItems: 0
+        maxItems: 1
+      Inkomsten:
+        type: array
+        items:
+          $ref: '#/components/schemas/Inkomstencomponent'
+        minItems: 0
+      Vermogenscomponenten:
+        type: array
+        items:
+          $ref: '#/components/schemas/Vermogenscomponent'
+        minItems: 0
+        uniqueItems: true
+      VrijlatingInkomsten:
+        type: array
+        items:
+          $ref: '#/components/schemas/VrijlatingInkomsten'
+        minItems: 0
+        maxItems: 1
+      Bewindvoerder:
+        type: array
+        items:
+          $ref: '#/components/schemas/Bewindvoerder'
+        minItems: 0
+        maxItems: 1
+      Aflossingsafspraak:
+        type: array
+        items:
+          $ref: '#/components/schemas/Aflossingsafspraak'
+        minItems: 0
+        uniqueItems: true
+      Correspondentieadres:
+        $ref: '#/components/schemas/Correspondentieadres'    
+    additionalProperties: false
+    required:
+      - Burgerservicenummer
+      - Geboortedatum
+  Partner:
+    properties:
+      Burgerservicenummer:
+        type: string
+        pattern: ^[0-9]{9}$
+        description: 'Een uniek identificerend nummer van een PERSOON, die ingeschreven staat in de Gemeentelijke Basisadministratie Persoonsgegevens (GBA) of de Registratie Niet-ingezetenen (RNI).Bron: SGROpmerking:Elk nummer moet voldoen aan de bij de voorwaarden beschreven proef.Voorwaarden waarde BSN:  Indien het nummer per cijfer wordt aangeduid als (s0 s1 s2 s3 s4 s5 s6 s7 s8), dan is de volgende voorwaarde te controleren: (9 x s0) + (8 x s1) + (7 x s2) + (6 x s3) + (5 x s4) + (4 x s5) + (3 x s6) + (2 x s7) - (1 x s8) is deelbaar door 11Toelichting:  Het Burgerservicenummer onderscheidt zich van het Sofi-nummer voornamelijk voor wat betreft het bereik ervan en de wijze waarop wettelijk is vastgelegd wat met behulp van het Burgerservicenummer mag gebeuren.  De gebruikers van het Burgerservicenummer bestaan uit overheidsorganen alsmede niet-overheidsorganen. Omdat het niet duidelijk is wat de criteria zijn om niet-overheidsorganen wel of niet toe te laten tot het gebruik van het Burgerservicenummer is besloten om de gebruikersaspecten niet in de definitie op te nemen.De oorspronkelijke naamgeving en definitie van dit gegevenselement conform de (authentieke) bron:Elementnaam:    BurgerservicenummerDefinitie:    Elk ingeschreven persoon heeft een BSN, een nummer dat de persoon uniek identificeert in alle overheidsadministraties.Norminstantie:    GBA'
+      Geboortedatum:
+        type: string
+        description: 'De datum van geboorte van een PERSOON.Bron: NEN 1888:2002 - Geboortedatum (overgenomen zoals in SGR)Opmerking:Deze datum staat gewoonlijk vermeld op de geboorteakte dan wel een ander brondocument.Een GEBOORTEDATUM behoort te worden vastgesteld in verband met zijn rechtsgeldige betekenis, in het bijzonder voor de instellingen die minimaal een SZ-WET uitvoeren.'
+      Voorkeurskanaal:
+        type: string
+        enum:
+          - Fysiek
+          - Digitaal
+        description: Het type verzending die de burger prefereert (digitaal of fysiek).
+      DatumAanvangRelatie:
+        type: string
+        description: 'Datum waarop de relatie van start is gegaan.Bron: GBI-Werkgroep Ontologie Inkomen'
+      IndicatieSamenwonend:
+        type: string
+        enum:
+          - Ja
+          - Nee
+        description: 'Indicatie in de relatie van aangaande personen of ze wel/niet samenwonen.Bron: GBI-Werkgroep Ontologie Inkomen'
+      IndicatieGezamenlijkeHuishouding:
+        type: string
+        enum:
+          - Ja
+          - Nee
+        description: 'Indicatie over of de personen wel/geen gezamenlijke huishouding voeren.Bron: GBI-Werkgroep Ontologie Inkomen'
+      IndicatieOnderhoudsplicht:
+        type: string
+        enum:
+          - Ja
+          - Nee
+        description: 'Indicatie over of er sprake is van een onderhoudsplicht van de persoon.Bron: GBI-Werkgroep Ontologie Inkomen'
+      Identiteitsbewijs:
+        type: array
+        items:
+          $ref: '#/components/schemas/Identiteitsbewijs'
+        minItems: 0
+      Vreemdelingendocument:
+        type: array
+        items:
+          $ref: '#/components/schemas/Vreemdelingendocument'
+        minItems: 0
+      Kinderen:
+        type: array
+        items:
+          $ref: '#/components/schemas/Kind'
+        minItems: 0
+      Huisvesting:
+        type: array
+        items:
+          $ref: '#/components/schemas/Huisvesting'
+        minItems: 1
+        maxItems: 1
+      Contactgegevens:
+        type: array
+        items:
+          $ref: '#/components/schemas/Contactgegevens'
+        minItems: 0
+      Huishouden:
+        type: array
+        items:
+          $ref: '#/components/schemas/Huishouden'
+        minItems: 0
+        maxItems: 1
+      Inkomsten:
+        type: array
+        items:
+          $ref: '#/components/schemas/Inkomstencomponent'
+        minItems: 0
+      Vermogenscomponenten:
+        type: array
+        items:
+          $ref: '#/components/schemas/Vermogenscomponent'
+        minItems: 0
+      VrijlatingInkomsten:
+        type: array
+        items:
+          $ref: '#/components/schemas/VrijlatingInkomsten'
+        minItems: 0
+        maxItems: 1
+      Bewindvoerder:
+        type: array
+        items:
+          $ref: '#/components/schemas/Bewindvoerder'
+        minItems: 0
+        maxItems: 1
+      Aflossingsafspraak:
+        type: array
+        items:
+          $ref: '#/components/schemas/Aflossingsafspraak'
+        minItems: 0
+        uniqueItems: true
+      Correspondentieadres:
+        $ref: '#/components/schemas/Correspondentieadres'
+    additionalProperties: false
+    required:
+      - Burgerservicenummer
+      - Geboortedatum
+      - DatumAanvangRelatie
+      - IndicatieSamenwonend
+      - IndicatieGezamenlijkeHuishouding
+      - IndicatieOnderhoudsplicht
+  Kind:
+    properties:
+      Burgerservicenummer:
+        type: string
+        pattern: ^[0-9]{9}$
+        description: 'Een uniek identificerend nummer van een PERSOON, die ingeschreven staat in de Gemeentelijke Basisadministratie Persoonsgegevens (GBA) of de Registratie Niet-ingezetenen (RNI).Bron: SGROpmerking:Elk nummer moet voldoen aan de bij de voorwaarden beschreven proef.Voorwaarden waarde BSN:  Indien het nummer per cijfer wordt aangeduid als (s0 s1 s2 s3 s4 s5 s6 s7 s8), dan is de volgende voorwaarde te controleren: (9 x s0) + (8 x s1) + (7 x s2) + (6 x s3) + (5 x s4) + (4 x s5) + (3 x s6) + (2 x s7) - (1 x s8) is deelbaar door 11Toelichting:  Het Burgerservicenummer onderscheidt zich van het Sofi-nummer voornamelijk voor wat betreft het bereik ervan en de wijze waarop wettelijk is vastgelegd wat met behulp van het Burgerservicenummer mag gebeuren.  De gebruikers van het Burgerservicenummer bestaan uit overheidsorganen alsmede niet-overheidsorganen. Omdat het niet duidelijk is wat de criteria zijn om niet-overheidsorganen wel of niet toe te laten tot het gebruik van het Burgerservicenummer is besloten om de gebruikersaspecten niet in de definitie op te nemen.De oorspronkelijke naamgeving en definitie van dit gegevenselement conform de (authentieke) bron:Elementnaam:    BurgerservicenummerDefinitie:    Elk ingeschreven persoon heeft een BSN, een nummer dat de persoon uniek identificeert in alle overheidsadministraties.Norminstantie:    GBA'
+      Geboortedatum:
+        type: string
+        description: 'De datum van geboorte van een PERSOON.Bron: NEN 1888:2002 - Geboortedatum (overgenomen zoals in SGR)Opmerking:Deze datum staat gewoonlijk vermeld op de geboorteakte dan wel een ander brondocument.Een GEBOORTEDATUM behoort te worden vastgesteld in verband met zijn rechtsgeldige betekenis, in het bijzonder voor de instellingen die minimaal een SZ-WET uitvoeren.'
+    additionalProperties: false
+    required:
+      - Burgerservicenummer
+      - Geboortedatum
+  Correspondentieadres:
+    type: object
+    oneOf:
+     - $ref: '#/components/schemas/NederlandsStraatadres'
+     - $ref: '#/components/schemas/NederlandsPostbusadres'
+     - $ref: '#/components/schemas/BuitenlandsAdres'
+  Kostendeler:
+    properties:
+      Burgerservicenummer:
+        type: string
+        pattern: ^[0-9]{9}$
+        description: 'Een uniek identificerend nummer van een PERSOON, die ingeschreven staat in de Gemeentelijke Basisadministratie Persoonsgegevens (GBA) of de Registratie Niet-ingezetenen (RNI).Bron: SGROpmerking:Elk nummer moet voldoen aan de bij de voorwaarden beschreven proef.Voorwaarden waarde BSN:  Indien het nummer per cijfer wordt aangeduid als (s0 s1 s2 s3 s4 s5 s6 s7 s8), dan is de volgende voorwaarde te controleren: (9 x s0) + (8 x s1) + (7 x s2) + (6 x s3) + (5 x s4) + (4 x s5) + (3 x s6) + (2 x s7) - (1 x s8) is deelbaar door 11Toelichting:  Het Burgerservicenummer onderscheidt zich van het Sofi-nummer voornamelijk voor wat betreft het bereik ervan en de wijze waarop wettelijk is vastgelegd wat met behulp van het Burgerservicenummer mag gebeuren.  De gebruikers van het Burgerservicenummer bestaan uit overheidsorganen alsmede niet-overheidsorganen. Omdat het niet duidelijk is wat de criteria zijn om niet-overheidsorganen wel of niet toe te laten tot het gebruik van het Burgerservicenummer is besloten om de gebruikersaspecten niet in de definitie op te nemen.De oorspronkelijke naamgeving en definitie van dit gegevenselement conform de (authentieke) bron:Elementnaam:    BurgerservicenummerDefinitie:    Elk ingeschreven persoon heeft een BSN, een nummer dat de persoon uniek identificeert in alle overheidsadministraties.Norminstantie:    GBA'
+      Geboortedatum:
+        type: string
+        description: 'De datum van geboorte van een PERSOON.Bron: NEN 1888:2002 - Geboortedatum (overgenomen zoals in SGR)Opmerking:Deze datum staat gewoonlijk vermeld op de geboorteakte dan wel een ander brondocument.Een GEBOORTEDATUM behoort te worden vastgesteld in verband met zijn rechtsgeldige betekenis, in het bijzonder voor de instellingen die minimaal een SZ-WET uitvoeren.'
+      DatumAanvangRelatie:
+        type: string
+        description: 'Datum waarop de relatie van start is gegaan.Bron: GBI-Werkgroep Ontologie Inkomen'
+      DatumEindeRelatie:
+        type: string
+        description: 'Datum waarop de relatie is beeindigt.Bron: GBI-Werkgroep Ontologie Inkomen'
+    additionalProperties: false
+    required:
+      - Burgerservicenummer
+      - Geboortedatum
+      - DatumAanvangRelatie
+  Huisvesting:
+    properties:
+      CodeRelatieBewonerTotHuisvesting:
+        type: string
+        enum:
+          - onbekend
+          - (mede)eigenaar
+          - huurder
+          - onderhuurder/kamerbewoner
+          - kostganger
+          - inwonend (bij ouders)
+          - gehuisvest in inrichting
+          - gehuisvest in instelling
+          - gehuisvest conform doelgroep Besluit adreslozen
+          - geen vaste woon- of verblijfplaats en niet behorend tot de doelgroep Besluit adreslozen
+          - anders
+          - niet van toepassing
+        description: 'Code die aangeeft in welke hoedanigheid de PERSOON gehuisvest is.Bron: SGR 16.0'
+    additionalProperties: false
+    required:
+      - CodeRelatieBewonerTotHuisvesting
+  Contactgegevens:
+    properties:
+      TenaamstellingTelefoonnummer:
+        type: string
+        enum:
+          - Onbekend
+          - Client (zelf)
+          - Begeleider
+          - Bewindvoerder
+          - Kind
+          - Broer of zus
+          - Ouder
+          - Overig
+        description: >-
+          Het opgegeven telefoonnummer hoeft niet van de persoon zelf te zijn.
+          Dit gegeven legt de tenaamstelling vast.
+      TelefoonLandnummer:
+        type: integer
+        pattern: ^-?[0-9]{1,}$
+        description: 'Het telefoon landnummer waaronder de PERSOON bereikbaar is.Norminstantie: ITU'
+      Telefoonnummer:
+        type: string
+        pattern: ^0[1-9][0-9]{8}$
+        description: Het telefoonnummer waaronder een PERSOON bereikbaar is.
+      IndicatieGeheimTelefoonnummer:
+        type: string
+        enum:
+          - Ja
+          - Nee
+        description: De code die aangeeft of het TELEFOONNUMMER beperkt bekend wordt gemaakt door de telecomprovider.
+      EMailadres:
+        type: string
+        pattern: ^[A-Za-z0-9_-]+([.][A-Za-z0-9_-]+)*@[A-Za-z0-9_-]+([.][A-Za-z0-9_-]+)*[.][A-Za-z0-9]+$
+        description: Het adres waaronder een PERSOON per elektronische post bereikbaar is.
+      IndicatieVoorkeurTelefoonnummer:
+        type: string
+        enum:
+          - Ja
+          - Nee
+        description: De code die aangeeft of het TELEFOONNUMMER het voorkeur nummer is.
+    additionalProperties: false
+  UitbetalingUitkering:
+    properties:
+      Bankrekening:
+        type: string
+        description: Bankrekeningnummer (IBAN)
+      Rekeninghouder:
+        type: string
+        description: ''
+      SoortUitbetaling:
+        type: string
+        enum:
+          - Klant
+          - Partner
+          - Gesplitst
+          - Gemachtigde
+          - Bewindvoerder
+        description: De manier waarop de uitbetaling moet worden gedaan, hetzij aan de klant, zijn parter of gesplitst aan beide, hetzij aan een gemachtigde of een bewindvoerder.
+      BankrekeningDerde:
+        type: string
+        description: IBAN nummer van derde. Een derde kan zijn een curator, een organisatie voor maatschappelijke opvang of een familielid.
+      RekeninghouderDerde:
+        type: string
+        description: Naam rekeninghouder derde. Een derde kan zijn een curator, een organisatie voor maatschappelijke opvang of een familielid.
+      AanDerdeReden:
+        type: string
+        description: De reden waarom er aan een derde uitbetaald moet worden. Een derde kan een curator, een organisatie voor matschappelijke opvang zijn of een famililid.
+      RekeninghouderPartner:
+        type: string
+        description: Naam rekeninghouder bankrekening partner
+      BankrekeningPartner:
+        type: string
+        description: IBAN nummer van partner aanvrager
+      Bewindvoerder:
+        type: array
+        items:
+          $ref: '#/components/schemas/Bewindvoerder'
+        minItems: 0
+        maxItems: 1
+    additionalProperties: false
+    required:
+      - SoortUitbetaling
+  Bewindvoerder:
+    properties:
+      KvkNummer:
+        type: integer
+        pattern: ^-?[0-9]{1,}$
+        description: ''
+      Vestigingsnummer:
+        type: integer
+        pattern: ^-?[0-9]{1,}$
+        description: 'Landelijk uniek identificerend administratienummer van een VESTIGING zoals toegewezen door de Kamer van Koophandel (KvK).Bron: RSGB3.0'
+    additionalProperties: false
+    required:
+      - KvkNummer
+  Identiteitsbewijs:
+    properties:
+      CodeSoortIdentiteitsbewijs:
+        type: string
+        enum:
+          - Nationaal paspoort
+          - Diplomatiek paspoort
+          - Dienstpaspoort
+          - Reisdocument voor vluchtelingen
+          - Reisdocument voor vreemdelingen
+          - Nooddocument
+          - Ander, door de minister van Justitie vastgesteld, reisdocument
+          - Europese identiteitskaart
+          - Vreemdelingendocument
+          - Nederlandse Identiteitskaart
+          - DigiD
+        description: Code die het soort IDENTITEITSBEWIJS aangeeft, conform de Wet op de Identificatieplicht.
+      DocumentnummerIdentiteitsbewijs:
+        type: string
+        description: De unieke aanduiding van het IDENTITEITSBEWIJS.
+      DatumEindeGeldigheidIdentiteitsbewijs:
+        type: string
+        description: De datum van de laatste dag waarop het IDENTITEITSBEWIJS geldig is.
+    additionalProperties: false
+    required:
+      - CodeSoortIdentiteitsbewijs
+  Vreemdelingendocument:
+    properties:
+      IndicatieArbeidToegestaan:
+        type: string
+        enum:
+          - Ja
+          - Nee
+        description: Code die aangeeft of blijkens het VREEMDELINGENDOCUMENT arbeid in loondienst is toegestaan.
+      IndicatieTewerkstellingsvergunningVereist:
+        type: string
+        enum:
+          - Ja
+          - Nee
+        description: Code die aangeeft of blijkens het VREEMDELINGENDOCUMENT de (aanstaande) werkgever van CLIENT SUWI een tewerkstellingsvergunning nodig heeft om hem in dienst te nemen.
+      IndicatieVerlengingAangevraagd:
+        type: string
+        enum:
+          - Ja
+          - Nee
+        description: Code die aangeeft of de CLIENT SUWI verlenging van het VREEMDELINGENDOCUMENT heeft aangevraagd, maar nog niet verkregen.
+      CodeSoortVreemdelingendocument:
+        type: string
+        enum:
+          - Geen
+          - A-document
+          - B-document
+          - C-document
+          - D-document
+          - E-document
+          - F1-document
+          - F2-document
+          - F3-document
+          - W-document
+          - BuZa-document
+          - Document I
+          - Document II
+          - Document III
+          - Document IV
+          - EU/EUR-document
+        description: Code die het soort VREEMDELINGENDOCUMENT aangeeft.
+    additionalProperties: false
+  RedenAanvraag:
+    properties:
+      Reden:
+        type: string
+        enum:
+          - Beleid - Nette betaling gedurende afgesproken periode
+          - Beleid - Overig
+          - Ambtshalve
+          - Externe reden (schuldsanering)
+        description: ''
+      Ingang bijstandsuitkering:
+        type: array
+        items:
+          $ref: '#/components/schemas/IngangBijstandsuitkering'
+        minItems: 0
+        maxItems: 1
+    additionalProperties: false
+    required:
+      - Reden
+  IngangBijstandsuitkering:
+    properties:
+      DatumMeldingBijGemeente:
+        type: string
+        description: Indien er direct een aanvraag is gedaan dan is de melddatum gelijk aan datum waarop aanvraag is ontvangen.
+      StartdatumUitkering:
+        type: string
+        description: Datum waarop uitkering ingaat
+    additionalProperties: false
+    required:
+      - DatumMeldingBijGemeente
+      - StartdatumUitkering
+  Betalingsblokkade:
+    properties:
+      DirectBlokkeren:
+        type: string
+        enum:
+          - Ja
+          - Nee
+        description: Al dan niet direct blokkeren
+      InitiëleAanmaakdatum:
+        type: string
+        description: De datum waarop de blokkade is aangemaakt en aan de dienst gekoppeld
+      Reden:
+        type: string
+        description: De reden om te blokkeren
+    additionalProperties: false
+    required:
+      - Blokkadetype
+      - Reden
+  Huishouden:
+    properties:
+      BegindatumHuishouden:
+        type: string
+        description: 'De datum waarop het huishouden is gevormd.Bron: GBI-Werkgroep Ontologie Inkomen'
+      EinddatumHuishouden:
+        type: string
+        description: 'De datum waarop het huishouden is beeindigd.Bron: GBI-Werkgroep Ontologie Inkomen'
+      Leefvorm:
+        type: string
+        enum:
+          - onbekend
+          - alleenstaande
+          - eenoudergezin
+          - samenwonend met partner met samenlevingscontract
+          - samenwonend met partner zonder samenlevingscontract
+          - samenwonend met inkomensafhankelijke kinderen
+          - samenwonend met (een) andere alleenstaande(n)
+          - samenwonend met huwelijks- of geregistreerd partner
+          - gehuwd/ongehuwd samenwonend
+          - anders
+          - niet gespecificeerd (niet gevoerd in de administratie)
+        description: ''
+    additionalProperties: false
+    required:
+      - Leefvorm
+  Vermogenscomponent:
+    properties:
+      CodeSoortVermogenscomponent:
+        type: string
+        enum:
+          - Eigen woning (huis/woonschip/woonwagen in eigendom)
+          - Aandeel onverdeelde boedel
+          - Leningen aan derden
+          - Schulden
+          - Schulden uitgezonderd studieschuld
+          - Levensverzekering
+          - Levensverzekering/belegging niet gekoppeld aan hypotheek
+          - Studieschuld
+          - Levensverzekering/belegging gekoppeld aan hypotheek
+          - Contanten
+          - Bank-/Girorekening
+          - Overig onroerend goed
+          - Waardepapieren
+          - Motorvoertuigen
+          - Caravans
+          - Antiek/sieraden
+          - Overige bezittingen
+          - Beleggingsproduct (Aandeel, Lease, Effect, Obligatie, e.d.)
+          - Hypotheek eigen woning
+          - Aanspraak op erfenis binnen zes maanden
+          - Digitale valuta (cryptomunten)
+        description: ''
+      NogAanTeSprekenVermogen:
+        type: number
+        pattern: ^-?[0-9]((;|,|\.)[0-9]{2}|)$
+        description: Bij personen niet opnieuw in de bijstand komen, kan het zijn dat zij in de vorige bijstandsperiode al een deel van hun vermogen hebben moeten opeten.Per vermogenscomponent moet de bedrijfsservice Vaststelling vermogen in staat zijn het resterende bedrag pe vermogenscomponent te bepalen.
+      Waardepeilingen:
+        type: array
+        items:
+          $ref: '#/components/schemas/Waardepeiling'
+        minItems: 0
+        uniqueItems: true
+    additionalProperties: false
+    required:
+      - CodeSoortVermogenscomponent
+  Waardepeiling:
+    properties:
+      Brontype:
+        type: string
+        enum:
+          - Klant
+          - Professional
+          - Register
+          - Externe bron
+        description: ''
+      WaardeVermogenscomponent:
+        type: number
+        pattern: ^-?[0-9]((;|,|\.)[0-9]{2}|)$
+        description: ''
+      BijgevoegdBewijs:
+        type: string
+        enum:
+          - Ja
+          - Nee
+        description: ''
+      LinkNaarBewijs:
+        type: string
+        description: ''
+      Peilmoment:
+        type: string
+        description: 'Het moment waarop het saldobedrag op de bankrekening stond.Bron: GBI-team Ontologie'
+    additionalProperties: false
+    required:
+      - Brontype
+      - WaardeVermogenscomponent
+      - Peilmoment
+  Inkomstencomponent:
+    properties:
+      Peilmoment:
+        type: string
+        description: Het moment waarop de inkomsten zijn geadministreerd. Omdat er op latere momenten in de tijd correcties op de bedragen kunnen komen, is het nodig dit gegeven bij de inkomstencomponent te administreren. Dit stelt tevens in staat om tijdreizen te faciliteren.
+      Inkomsten:
+        type: number
+        pattern: ^-?[0-9]((;|,|\.)[0-9]{2}|)$
+        description: Het geldbedrag waarop de boeking betrekking heeft geldig voor de periode in dit inkomstencomponent.
+      BrutoNetto:
+        type: string
+        enum:
+          - Bruto
+          - Netto
+        description: Geeft aan of de inkomsten geadministreerd in dit inkomstencomponent bruto of netto zijn.
+      Inkomstencomponenttype:
+        type: string
+        enum:
+          - Alimentatie
+          - Ander inkomen
+          - Betaald werk
+          - Pensioen
+          - Studiefinanciering
+          - Uitkering
+          - Stage
+          - Hobby
+          - Eigen bedrijf
+          - Inkomstenvermindering
+          - Vergoeding
+          - Heffingskorting
+        description: Het type van de abstracte inkomstencomponent (zie ook alle specialisatierelaties).
+      Boekingsdatum:
+        type: string
+        description: De datum waarop het bedrag in dit inkomstencomponent is geboekt op een rekening van de klant.
+      PeriodeStartdatum:
+        type: string
+        description: De startdatum van de periode waarop het geboekte bedrag in dit inkomstencomponent betrekking heeft.
+      PeriodeEinddatum:
+        type: string
+        description: De einddatum van de periode waarop het geboekte bedrag in dit inkomstencomponent betrekking heeft.
+      Werkgever:
+        type: array
+        items:
+          $ref: '#/components/schemas/OrganisatorischeEenheid'
+        minItems: 0
+        maxItems: 1
+      Heffingskorting:
+        type: array
+        items:
+          $ref: '#/components/schemas/Heffingskorting'
+        minItems: 0
+      Vakantiegeld:
+        type: array
+        items:
+          $ref: '#/components/schemas/Vakantiegeld'
+        minItems: 0
+        maxItems: 1
+    additionalProperties: false
+    required:
+      - Inkomsten
+      - BrutoNetto
+      - Inkomstencomponenttype
+      - PeriodeStartdatum
+      - PeriodeEinddatum
+  OrganisatorischeEenheid:
+    properties:
+      Naam:
+        type: string
+        description: 'De feitelijke naam van de organisatorische eenheid.Bron: RGBZ2.0'
+    additionalProperties: false
+    required:
+      - Naam
+  Vakantiegeld:
+    properties:
+      Inkomsten:
+        type: number
+        pattern: ^-?[0-9]((;|,|\.)[0-9]{2}|)$
+        description: Het geldbedrag waarop de boeking betrekking heeft geldig voor de periode in dit inkomstencomponent.
+      PeriodeStartdatum:
+        type: string
+        description: De startdatum van de periode waarop het geboekte bedrag in dit inkomstencomponent betrekking heeft.
+      PeriodeEinddatum:
+        type: string
+        description: De einddatum van de periode waarop het geboekte bedrag in dit inkomstencomponent betrekking heeft.
+      Boekingsdatum:
+        type: string
+        description: De datum waarop het bedrag in dit inkomstencomponent is geboekt op een rekening van de klant.
+    additionalProperties: false
+    required:
+      - Boekingsdatum
+  Heffingskorting:
+    properties:
+      Inkomsten:
+        type: number
+        pattern: ^-?[0-9]((;|,|\.)[0-9]{2}|)$
+        description: Het geldbedrag waarop de boeking betrekking heeft geldig voor de periode in dit inkomstencomponent.
+    additionalProperties: false
+    required:
+      - Inkomsten
+  Norm:
+    properties:
+      SoortWettelijkeNorm:
+        type: string
+        description: n.t.b.
+      AfwijkendeNorm:
+        type: string
+        description: n.t.b.
+      Normbedrag:
+        type: number
+        pattern: ^-?[0-9]((;|,|\.)[0-9]{2}|)$
+        description: n.t.b.
+      Normpercentage:
+        type: number
+        description: n.t.b.
+    additionalProperties: false
+    required:
+      - Normbedrag
+      - Normpercentage
+  Verlaging:
+    properties:
+      PeriodeStartdatum:
+        type: string
+        description: De startdatum van de periode
+      Einddatum:
+        type: string
+        description: n.t.b.
+      Percentage:
+        type: integer
+        pattern: ^-?[0-9]{1,}$
+        description: De hoogte van het percentage dat moet worden toegepast op het bedrag van de leveringscomponent.
+      Bedrag:
+        type: number
+        pattern: ^-?[0-9]((;|,|\.)[0-9]{2}|)$
+        description: De hoogte van het bedrag voor deze leveringscomponent.
+      OmschrijvingAfwijking:
+        type: string
+        description: De omschrijving van de afwijking, die is toegepast
+    additionalProperties: false
+    required:
+      - Einddatum
+  MaatregelOpUitkering:
+    properties:
+      DatumAanvangMaatregel:
+        type: string
+        description: ''
+      DatumEindeMaatregel:
+        type: string
+        description: ''
+      CodeRedenMaatregel:
+        type: string
+        description: ''
+      CodeRedenAfwijkingMaatregel:
+        type: string
+        pattern: ^(\{{0,1}([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}-([0-9a-fA-F]){12}\}{0,1})$
+        description: ''
+      Percentage:
+        type: number
+        description: ''
+      Bedrag:
+        type: number
+        pattern: ^-?[0-9]((;|,|\.)[0-9]{2}|)$
+        description: ''
+      MotivatieAfwijkingMaatregel:
+        type: string
+        description: ''
+    additionalProperties: false
+    required:
+      - DatumAanvangMaatregel
+      - DatumEindeMaatregel
+      - CodeRedenAfwijkingMaatregel
+  PeriodiekBijzondereBijstandLevensonderhoud:
+    properties:
+      Startdatum:
+        type: string
+        description: De startdatum van de periodiek
+      Einddatum:
+        type: string
+        description: Einddatum van de periodiek
+      Kostensoort:
+        type: string
+        enum:
+          - (eenmalige) uitgaven in het kader van armoedebeleid (WWB, art 35)
+          - aanvullende bijstand jonger dan 21 jaar
+          - alarmsysteem
+          - andere hulpmiddelen
+          - arbeidsongeschiktheidsverzekering en ziektekostenverzekering
+          - bedrijfsdoelen
+          - begrafeniskosten
+          - betaling naar aanleiding van borgstelling
+          - bril
+          - dieetkosten
+          - dieetkosten en kosten geneesmiddelen
+          - eenmalig levensonderhoud
+          - huishoudelijke hulp of gezinshulp
+          - intra/semi-murale verpleging/verzorging
+          - kinderopvang (niet uitstroombevordering)
+          - kinderopvang arbeid of scholing
+          - kleding en schoeisel
+          - kosten eigen vervoermiddel
+          - kosten fysiotherapie/psychotherapie
+          - kosten gespecialiseerde (ziekenhuis)zorg
+          - kosten hulpmiddelen
+          - kosten identificatie
+          - kosten in verband met geboorte
+          - kosten inrichting of huisraad
+          - kosten specialist
+          - kosten tandarts
+          - kosten telefoon
+          - kosten vestiging krediethypotheek
+          - langdurigheidstoeslag
+          - maaltijdvoorziening
+          - met terugwerkende kracht verstrekte langdurigheidstoeslag
+          - omscholingskosten tertiair niveau
+          - opvang in crisiscentrum
+          - opvang/huisvesting in pension of hotel
+          - overige algemene levensbehoeften
+          - overige kosten
+          - overige kosten (para)medische hulp
+          - overige kosten financiële transacties
+          - overige kosten in verband met huishouding
+          - overige kosten maatschappelijke zorg
+          - overige kosten vermindering bijstand
+          - overige kostenin verband met woonvoorzieningen
+          - overige medische/paramedische hulp
+          - overige niet indeelbare kosten
+          - overige opvang
+          - overige vervoerskosten
+          - premie zorgverzekering aan zak- en kleedgeldgerechtigden
+          - rechtsbijstand
+          - reiskosten arbeid of scholing
+          - schuldsanering
+          - studie- en omscholingskosten
+          - taxikosten
+          - toeslag aan zak- en kleedgeldgerechtigden (premie ZVW)
+          - toeslag boven norm
+          - toeslag voormalige eenoudergezinnen
+          - verhuiskosten
+          - verpleging aan huis
+          - vervoerskosten
+          - verwarmings- en verlichtingskosten
+          - voorzieningen in verband met handicap
+          - voorzieningen voor gehandicapten en ouderen
+          - waarborgsom
+          - woonkosten boven huursubsidiegrens
+          - woonkosten tot huursubsidiegrens
+          - ziektekostenverzekering
+        description: n.t.b.
+      Bedrag:
+        type: number
+        pattern: ^-?[0-9]((;|,|\.)[0-9]{2}|)$
+        description: n.t.b.
+      Fiscaal:
+        type: string
+        enum:
+          - Ja
+          - Nee
+        description: Aanduiding of het uitgekeerde bedrag in het onderdeel dienst van dit onderdeel diensttype fiscaal is belast.
+      Periodiciteit:
+        type: string
+        enum:
+          - Niet van toepassing
+          - Geen
+          - Incidenteel
+          - Eenmalig
+          - Minuut
+          - Uur
+          - Dag
+          - Week
+          - 2 weken
+          - 4 weken
+          - Maand
+          - 5 weken
+          - 13 weken
+          - Kwartaal
+          - Halfjaar
+          - 52 weken
+          - Jaar
+          - Overig
+        description: De periode van uitbetaling
+    additionalProperties: false
+    required:
+      - Startdatum
+      - Einddatum
+      - Kostensoort
+      - Bedrag
+      - Fiscaal
+      - Periodiciteit
+  VrijlatingInkomsten:
+    properties:
+      Begindatum:
+        type: string
+        description: Begindatum
+      Einddatum:
+        type: string
+        description: Einddatum
+      SoortVrijlating:
+        type: string
+        enum:
+          - Inkomstenvrijlating 25,0% - Art. 31 lid 2n
+          - Inkomstenvrijlating 12,5% - Art. 31 lid 2r
+          - Inkomstenvrijlating 15,0% - Art. 31 lid 2y
+        description: Vermindering op de totale inkomsten van een persoon volgens de nomsetting van artikel 31, lid 2n, 2r,2y Participatiewet. De keuze van het lid vormt de keuze uit de enumeratie.
+    additionalProperties: false
+    required:
+      - SoortVrijlating
+  Aflossingsafspraak:
+    properties:
+      Categorie:
+        type: string
+        enum:
+          - Vergoeding vrijwilligerswerk
+          - Afkoopwaarde lijfrente
+          - Huur of onderhuur
+          - Giften
+          - Toelagen
+          - Inkomen uit buitenland
+          - Zorgpremie
+          - Anders
+        description: De CBS-categorie van de vordering.
+      Startdatum:
+        type: string
+        description: De datum waarop de gemaakte afspraak ingaat.
+      Einddatum:
+        type: string
+        description: De datum waarop de gemaakte afspraak eindigt.
+      Periodiek:
+        type: string
+        enum:
+          - Niet van toepassing
+          - Geen
+          - Incidenteel
+          - Eenmalig
+          - Minuut
+          - Uur
+          - Dag
+          - Week
+          - 2 weken
+          - 4 weken
+          - Maand
+          - 5 weken
+          - 13 weken
+          - Kwartaal
+          - Halfjaar
+          - 52 weken
+          - Jaar
+          - Overig
+        description: De afgesproken periodiek, meestal een maand, waarop het afgesproken bedrag wordt afgelost.
+      Bedrag:
+        type: number
+        pattern: ^-?[0-9]((;|,|\.)[0-9]{2}|)$
+        description: Het afgesproken bedrag, dat wordt afgelost.
+      IndicatieInclusiefVakantiegeld:
+        type: string
+        enum:
+          - Ja
+          - Nee
+        description: Deze indicatie geeft aan of bij inhouding op de uitkering de inhouding betrekking heeft op:hoogte uitkering zonder vakantiegeld ofhoogte uitkering met vakantiegeld.
+    additionalProperties: false
+    required:
+      - Categorie
+      - Startdatum
+      - Periodiek
+      - Bedrag
+  NederlandsStraatadres:
+    properties:
+      Locatieomschrijving:
+        type: string
+        description: 'Een nadere aanduiding bij de STRAATNAAM en - indien aanwezig - het HUISNUMMER of bij Postbus en POSTBUSNUMMER, dan wel Antwoordnummer en ANTWOORDNUMMER.Bron: SGR 16.0, gebaseerd op NEN 5825:2002 - LocatieomschrijvingOpmerkingen:Gebruikmaking van de LOCATIEOMSCHRIJVING kan om verschillende redenen wenselijk dan wel noodzakelijk zijn. Het HUISNUMMER kan ontbreken of men wil niet-uiterlijk waarneembare kenmerken, zoals toevoegingen voor nadere differentiatie achter de voordeur, vermelden.Voorbeelden van toevoegingen die in de LOCATIEOMSCHRIJVING opgenomen kunnen worden, zijn:poste restantewoonboot Mariannewoonwagen Bambiflat Orionkamer 412appartement V 113kelder, zolder, souterrain, enz.1e verdieping, 2e verdieping, enz.aanduiding ten behoeve van horizontale verdeling, zoals:linksmidden dwarsrechtsvoormidden evenwijdigachtervoor linksmidden linksachter linksvoor middenmidden middenachter midden2. De waarde poste restante voor een LOCATIEOMSCHRIJVING is niet toegestaan in een DOMICILIE-ADRES.3. De toelichting van LOCATIEBESCHRIJVING volgens BRP is een geheel of gedeeltelijke omschrijving van de ligging van een object. Als locatiebeschrijving is niet toegestaan een  postbus (postbox) en een poste restante.Bron: SGR 16.0'
+      Postcode:
+        type: string
+        pattern: ^[1-9][0-9]{3} ?[a-zA-Z]{2}$
+        description: 'De officiële codering van TNT Post voor een Nederlands postadres, bestaande uit een numeriek deel en een alfabetisch deel.Bron: SGR 16.0Norminstantie: NEN 5825:2002 - PostcodeOpmerking:-360 Het POSTCODE numerieke deel - bestaande uit vier cijfers - (formaat N4), is het deel van de POSTCODE dat een woonplaats, een wijk in een woonplaats, een groep postbussen in een woonplaats of een groep ANTWOORDNUMMERS in een woonplaats aangeeft. (Bron: STUCON)Het POSTCODE alfabetische deel - bestaande uit twee hoofdletters - (formaat A2), is het deel van de POSTCODE dat binnen een woonplaats of een wijk in een woonplaats, betrekking heeft op een groep van ongeveer 25 woningen, bedrijfspanden of iets dergelijks, op een aantal postbussen of op een aantal ANTWOORDNUMMERS. (Bron: UGR)Alle bestaanbare waardes voor POSTCODE zijn te vinden in de TNT postcodetabel. Deze is op te vragen bij de TNT Post.Bron: SGR 16.0'
+      Woonplaatsnaam:
+        type: string
+        description: 'De naam van een door het bevoegde gemeentelijke orgaan als zodanig aangewezen gedeelte van het gemeentelijk grondgebied.Norminstantie: BAG/GBABron: SGR 16.0'
+      Straatnaam:
+        type: string
+        description: 'De officiële door de gemeente vastgestelde naam van een straat.Bron: SGR 16.0Norminstantie: NEN 5825:2002 - StraatnaamOpmerkingen:-360 Het waardebereik van dit gegevenselement is te vinden in de PTT-postcodetabel. Deze is op te vragen bij de PTT.De inkortingsregels uit bijlage A van de NEN 5825 zijn van toepassing op straatnamen van meer dan 24 posities. De inkortingsregels zijn in de PTT-postcodetabel reeds toegepast.Bron: SGR 16.0'
+      Huisnummer:
+        type: integer
+        pattern: ^-?[0-9]{1,}$
+        description: 'De numerieke aanduiding zoals deze door de gemeente aan het object is toegekend.Bron: SGR 16.0Norminstantie: NEN 5825:2002 - Huisnummer'
+      Huisletter:
+        type: string
+        description: 'Een alfabetisch teken achter het huisnummer zoals dit door het gemeentebestuur is toegekend.Bron: SGR 16.0Norminstantie: GBA'
+      Huisnummertoevoeging:
+        type: string
+        description: 'De huisnummertoevoeging zoals deze door de gemeente aan het object is toegekend.Bron: SGR 16.0Norminstantie: NEN 5825:2002 - HuisnummertoevoegingOpmerking:Bij de feitelijke toekenning van identificatiegegevens aan een object in aanvulling op het huisnummer kan door gemeenten gebruik gemaakt worden van de elementen  huisletter  en  huisnummertoevoeging . In het element huisnummertoevoeging van deze norm worden deze door de gemeente toegekende elementen opgenomen.Bron: SGR 16.0'
+      AanduidingBijHuisnummer:
+        type: string
+        description: 'De aanduiding die wordt gebruikt voor adressen die niet zijn voorzien van de gebruikelijke straatnaam en huisnummeraanduidingen.Bron: SGR 16.0Norminstantie: GBA'
+    additionalProperties: false
+    required:
+      - Postcode
+      - Woonplaatsnaam
+      - Straatnaam
+      - Huisnummer
+  NederlandsPostbusadres:
+    properties:
+      Locatieomschrijving:
+        type: string
+        description: 'Een nadere aanduiding bij de STRAATNAAM en - indien aanwezig - het HUISNUMMER of bij Postbus en POSTBUSNUMMER, dan wel Antwoordnummer en ANTWOORDNUMMER.Bron: SGR 16.0, gebaseerd op NEN 5825:2002 - LocatieomschrijvingOpmerkingen:Gebruikmaking van de LOCATIEOMSCHRIJVING kan om verschillende redenen wenselijk dan wel noodzakelijk zijn. Het HUISNUMMER kan ontbreken of men wil niet-uiterlijk waarneembare kenmerken, zoals toevoegingen voor nadere differentiatie achter de voordeur, vermelden.Voorbeelden van toevoegingen die in de LOCATIEOMSCHRIJVING opgenomen kunnen worden, zijn:poste restantewoonboot Mariannewoonwagen Bambiflat Orionkamer 412appartement V 113kelder, zolder, souterrain, enz.1e verdieping, 2e verdieping, enz.aanduiding ten behoeve van horizontale verdeling, zoals:linksmidden dwarsrechtsvoormidden evenwijdigachtervoor linksmidden linksachter linksvoor middenmidden middenachter midden2. De waarde poste restante voor een LOCATIEOMSCHRIJVING is niet toegestaan in een DOMICILIE-ADRES.3. De toelichting van LOCATIEBESCHRIJVING volgens BRP is een geheel of gedeeltelijke omschrijving van de ligging van een object. Als locatiebeschrijving is niet toegestaan een  postbus (postbox) en een poste restante.Bron: SGR 16.0'
+      Postcode:
+        type: string
+        pattern: ^[1-9][0-9]{3} ?[a-zA-Z]{2}$
+        description: 'De officiële codering van TNT Post voor een Nederlands postadres, bestaande uit een numeriek deel en een alfabetisch deel.Bron: SGR 16.0Norminstantie: NEN 5825:2002 - PostcodeOpmerking:-360 Het POSTCODE numerieke deel - bestaande uit vier cijfers - (formaat N4), is het deel van de POSTCODE dat een woonplaats, een wijk in een woonplaats, een groep postbussen in een woonplaats of een groep ANTWOORDNUMMERS in een woonplaats aangeeft. (Bron: STUCON)Het POSTCODE alfabetische deel - bestaande uit twee hoofdletters - (formaat A2), is het deel van de POSTCODE dat binnen een woonplaats of een wijk in een woonplaats, betrekking heeft op een groep van ongeveer 25 woningen, bedrijfspanden of iets dergelijks, op een aantal postbussen of op een aantal ANTWOORDNUMMERS. (Bron: UGR)Alle bestaanbare waardes voor POSTCODE zijn te vinden in de TNT postcodetabel. Deze is op te vragen bij de TNT Post.Bron: SGR 16.0'
+      Woonplaatsnaam:
+        type: string
+        description: 'De naam van een door het bevoegde gemeentelijke orgaan als zodanig aangewezen gedeelte van het gemeentelijk grondgebied.Norminstantie: BAG/GBABron: SGR 16.0'
+      Postbusnummer:
+        type: integer
+        pattern: ^-?[0-9]{1,}$
+        description: 'De numerieke aanduiding zoals deze door TNT Post is vastgesteld voor een Nederlandse POSTBUS.Bron: SGR 16.0Norminstantie: NEN 5825:2002 - Postbusnummer'
+    additionalProperties: false
+    required:
+      - Postcode
+      - Woonplaatsnaam
+      - Postbusnummer
+  BuitenlandsAdres:
+    properties:
+      LocatieomschrijvingBuitenland:
+        type: string
+        description: 'Een nadere aanduiding bij een buitenlands adres.Norminstantie: UGRBron: SGR 16.0Opmerking:Gebruikmaking van dit gegevenselement kan om verschillende redenen wenselijk dan wel noodzakelijk zijn. Het HUISNUMMER BUITENLAND kan ontbreken of men wil niet-uiterlijk waarneembare kenmerken, zoals toevoegingen voor nadere differentiatie achter de voordeur, vermelden.'
+      PostcodeBuitenland:
+        type: string
+        pattern: ^[1-9][0-9]{3} ?[a-zA-Z]{2}$
+        description: 'Een door de buitenlandse postdienst vastgestelde codering voor een adres in het buitenland.Norminstantie: UGRBron: SGR 16.0Opmerking:De indeling naar staat, departement, provincie of gebiedsdeel is in de POSTCODE BUITENLAND vervat en dus overbodig geworden om apart door te geven in een gegevensuitwisseling. Indien er geen POSTCODE BUITENLAND is, kan echter de aanduiding van staat, departement, provincie of gebiedsdeel opgenomen worden in REGIONAAM BUITENLAND.'
+      RegionaamBuitenland:
+        type: string
+        description: 'De naam van een gebiedsdeel binnen een land.Norminstantie: UGRBron: SGR 16.0Opmerking:Inkortingsregels:Als een REGIONAAM BUITENLAND langer is dan 24 posities, moet de eerste inkortingsregel worden toegepast. Blijkt na toepassing daarvan de REGIONAAM BUITENLAND nog steeds de 24 posities te overschrijden, dan treedt de tweede inkortingsregel in werking, en zo vervolgend totdat het aantal posities nog ten hoogste 24 bedraagt of alle inkortingsregels zijn gehanteerd. Tenzij anders vermeld, worden de inkortingsregels van rechts beginnend toegepast.Inkortingsregel 1.Verwijder leestekens uit de REGIONAAM BUITENLAND.Inkortingsregel 2.Kort in de REGIONAAM BUITENLAND, naar eigen inzicht, de tussenvoegsels in.Inkortingsregel 3.Kort het eerste bijvoeglijk naamwoord, en indien nodig de daarop volgende bijvoeglijke naamwoorden, van een samengestelde REGIONAAM BUITENLAND in tot de eerste letter van het woord, tenzij het betreffende woord al een inkorting is.Inkortingsregel 4.Kort het eerste woord na de tussenvoegsel, en indien nodig de daaropvolgende woorden, van een samengestelde REGIONAAM BUITENLAND in tot de eerste letter van het woord, tenzij het betreffende woord al een inkorting is.Inkortingsregel 5.Vraag advies aan degene, die REGIONAAM BUITENLAND verstrekt.'
+      WoonplaatsnaamBuitenland:
+        type: string
+        description: 'De naam van een woonplaats in het buitenland.Norminstantie: UGRBron: SGR 16.0Opmerking:Inkortingsregels:Als een WOONPLAATSNAAM BUITENLAND langer is dan 24 posities, moet de eerste inkortingsregel worden toegepast. Blijkt na toepassing daarvan de WOONPLAATSNAAM BUITENLAND nog steeds de 24 posities te overschrijden, dan treedt de tweede inkortingsregel in werking, en zo vervolgend totdat het aantal posities nog ten hoogste 24 bedraagt of alle inkortingsregels zijn gehanteerd. Tenzij anders vermeld, worden de inkortingsregels van rechts beginnend toegepast.Inkortingsregel 1.Verwijder leestekens uit de WOONPLAATSNAAM BUITENLAND.Inkortingsregel 2.Kort in de WOONPLAATSNAAM BUITENLAND, naar eigen inzicht, de tussenvoegsels in.Inkortingsregel 3.Kort het eerste bijvoeglijk naamwoord, en indien nodig de daarop volgende bijvoeglijke naamwoorden, van een samengestelde WOONPLAATSNAAM BUITENLAND in tot de eerste letter van het woord, tenzij het betreffende woord al een inkorting is.Inkortingsregel 4.Kort het eerste woord na de tussenvoegsel, en indien nodig de daaropvolgende woorden, van een samengestelde WOONPLAATSNAAM BUITENLAND in tot de eerste letter van het woord, tenzij het betreffende woord al een inkorting is.Inkortingsregel 5.Vraag advies aan degene, die WOONPLAATSNAAM BUITENLAND verstrekt.'
+      Landsnaam:
+        type: string
+        description: 'De naam van een land of een gebiedsdeel.Norminstantie: UGRBron: SGR 16.0Opmerking:Indien voor een bepaald land (nog) geen LANDENCODE ISO in ISO 3166 vermeld staat, moet LANDSNAAM worden ingevuld.'
+      LandencodeIso:
+        type: string
+        description: 'De code van een huidig land of gebiedsdeel conform ISO 3166.Norminstantie: ISO 3166 (Entity, Alpha-2 code)Bron: SGR 16.0Opmerking:LANDENCODE ISO is niet expliciet gedefinieerd in ISO 3166. De omschrijving van dit gegevenselement is dan ook een SUWI-omschrijving.Tabel ISO 3166 Codes for the representation of names of countries and their subdivisionsLANDENCODE ISO dient in principe in ADRES BUITENLAND altijd te worden opgenomen.Indien voor een bepaald land (nog) geen code in ISO 3166 staat vermeld, moet LANDSNAAM worden ingevuld.'
+      HuisnummerBuitenland:
+        type: integer
+        pattern: ^-?[0-9]{1,}$
+        description: 'De aanduiding van een (deel van een) pand in het buitenland.Norminstantie: UGRBron: SGR 16.0Opmerking:Het HUISNUMMER BUITENLAND is inclusief een eventuele huisnummertoevoeging.'
+      StraatnaamBuitenland:
+        type: string
+        description: 'De naam van een straat in het buitenland.Norminstantie: UGRBron: SGR 16.0Opmerking:Inkortingsregels:Als de STRAATNAAM BUITENLAND langer is dan 24 posities, moet de eerste inkortingsregel worden toegepast. Blijkt na toepassing daarvan de STRAATNAAM BUITENLAND nog steeds de 24 posities te overschrijden, dan treedt de tweede inkortingsregel in werking, en zo vervolgend totdat het aantal posities nog ten hoogste 24 bedraagt of alle inkortingsregels zijn gehanteerd.Inkortingsregel 1.Verwijder de leestekens punt (.) en apostrof uit de STRAATNAAM BUITENLAND.Inkortingsregel 2.Kort de woorden die een richting aanduiden, indien zij als laatste element en zelfstandig in de STRAATNAAM BUITENLAND voorkomen, in tot een letter.Voorbeelden:North NOuest OSouth SEastside EInkortingsregel 3.Kort de uitgangen of losse woorden die de straataanduiding betreffen zoveel mogelijk volgens de NEN 5825 in en anders naar eigen inzicht.Voorbeelden:strasse strboulevard blvdstreet st.rue rcanal canhavn hInkortingsregel 4.De getallen in Romeinse cijfers worden vervangen door Arabische cijfers.Voorbeelden:XXV 25XIII 13Inkortingsregel 5.De geschreven telwoorden worden vervangen door Arabische cijfers.Voorbeelden:seize 16eight 8Inkortingsregel 6.De voluit geschreven rangtelwoorden worden vervangen door Arabische cijfers plus hun gebruikelijke uitgang.Voorbeeld:sixième 6eseventeenth 17thInkortingsregel 7.Kort de tussenvoegsels zoveel mogelijk volgens de NEN 5825 in en anders naar eigen inzicht.Voorbeelden:an den adde dof oInkortingsregel 8.Kort het eerste bijvoeglijk naamwoord of de eerste titel bij het naambepalende zelfstandige woord tot op de eerste letter in. Dit zoveel mogelijk volgens de NEN 5825 en anders naar eigen inzicht.Voorbeelden:Comte CGraf GGreat GQueen QGeneral GInkortingsregel 9.Pas inkortingsregel 8 opnieuw toe, maar nu op het tweede bijvoeglijk naamwoord of de tweede titel.Inkortingsregel 10.Vraag advies aan degene die de STRAATNAAM BUITENLAND heeft verstrekt.'
+    additionalProperties: false
+    required:
+      - LandencodeIso
